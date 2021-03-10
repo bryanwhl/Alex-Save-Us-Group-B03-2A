@@ -1,8 +1,18 @@
 #include <serialize.h>
+
+#include <serialize.h>
 #include <stdarg.h>
 
 #include "packet.h"
 #include "constants.h"
+#include <math.h>
+
+#define PI 3.141592654
+#define ALEX_LENGTH 20
+#define ALEX_BREADTH 12
+
+float alexDiagonal = 0.0;
+float alexCirc = 0.0;
 
 typedef enum
 {
@@ -12,6 +22,7 @@ REVERSE=2,
 LEFT=3,
 RIGHT=4
 } TDirection;
+
 volatile TDirection dir = STOP;
 
 void dbprint(char *format, ...) {
@@ -70,6 +81,8 @@ volatile unsigned long forwardDist;
 volatile unsigned long reverseDist;
 unsigned long deltaDist;
 unsigned long newDist;
+unsigned long deltaTicks;
+unsigned long targetTicks;
 
 
 /*
@@ -401,6 +414,18 @@ void forward(float dist, float speed)
 // continue reversing indefinitely.
 void reverse(float dist, float speed)
 {
+  if (dist > 0)
+  {
+    deltaDist = dist;
+    
+  }
+  else
+  {
+    deltaDist = 9999999;
+  }
+
+  newDist = deltaDist + reverseDist;
+  
   dir = REVERSE;
   int val = pwmVal(speed);
 
@@ -417,6 +442,14 @@ void reverse(float dist, float speed)
   analogWrite(RF, 0);
 }
 
+
+unsigned long computeDeltaTicks(float ang)
+{
+  unsigned long ticks = (unsigned long) ((ang * alexCirc * COUNTS_PER_REV) / (360.0 * WHEEL_CIRC));
+
+  return ticks;
+}
+
 // Turn Alex left "ang" degrees at speed "speed".
 // "speed" is expressed as a percentage. E.g. 50 is
 // turn left at half speed.
@@ -424,9 +457,21 @@ void reverse(float dist, float speed)
 // turn left indefinitely.
 void left(float ang, float speed)
 {
+  
   dir = LEFT;
   int val = pwmVal(speed);
 
+  if (ang == 0)
+  {
+    deltaTicks = 99999999;
+  }
+  else
+  {
+    deltaTicks = computeDeltaTicks(ang);
+  }
+
+  targetTicks = leftReverseTicksTurns + deltaTicks;
+  
   // For now we will ignore ang. We will fix this in We
   // We will also replace this code with bare-metal later.
   // To turn left we reverse the left wheel and move
@@ -444,8 +489,20 @@ void left(float ang, float speed)
 // turn right indefinitely.
 void right(float ang, float speed)
 {
-  dir = RIGHT;
+
+   dir = RIGHT;
   int val = pwmVal(speed);
+  
+  if (ang == 0)
+  {
+    deltaTicks = 99999999;
+  }
+  else
+  {
+    deltaTicks = computeDeltaTicks(ang);
+  }
+  
+  targetTicks = rightReverseTicksTurns + deltaTicks;
 
   // We will also replace this code with bare-metal later.
   // To turn right we reverse the right wheel and move
@@ -590,6 +647,9 @@ void waitForHello()
 void setup() {
   // put your setup code here, to run once:
 
+  alexDiagonal = sqrt((ALEX_LENGTH * ALEX_LENGTH) + (ALEX_BREADTH * ALEX_BREADTH));
+  alexCirc = PI * alexDiagonal;
+  
   cli();
   setupEINT();
   setupSerial();
@@ -668,7 +728,7 @@ void loop() {
       
     }
 
-    else if (dir == BACKWARD)
+    else if (dir == REVERSE)
     {
        if (reverseDist > newDist)
        {
@@ -684,5 +744,37 @@ void loop() {
       stop();
     }
   }
-   
+
+
+
+   if (deltaTicks > 0)
+   {
+    if (dir == LEFT)
+    {
+      if (leftReverseTicksTurns >= targetTicks)
+      {
+        deltaTicks = 0;
+        targetTicks = 0;
+        stop();
+      }
+    }
+
+    else if (dir == RIGHT)
+    {
+      if (rightReverseTicksTurns >= targetTicks)
+      {
+        deltaTicks = 0;
+        targetTicks = 0;
+        stop();
+      }
+    }
+
+    else if (dir == STOP)
+    {
+      deltaTicks = 0;
+      targetTicks = 0;
+      stop();
+    }
+    
+   }
 }
