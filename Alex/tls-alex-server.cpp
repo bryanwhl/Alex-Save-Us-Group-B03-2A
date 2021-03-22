@@ -10,7 +10,7 @@
 #define PORT_NAME			"/dev/ttyACM0"
 /* END TODO */
 
-#define BAUD_RATE			B57600
+#define BAUD_RATE			B9600
 
 // TLS Port Number
 #define SERVER_PORT			5000
@@ -199,8 +199,8 @@ void sendNetworkData(const char *data, int len)
               connection we want to write to. */
 
             /* END TODO */
-            sslWrite(tls_conn, data, len);
-
+            c = sslWrite(tls_conn, data, len);
+            
         }
 
 		// Network is still active if we can write more then 0 bytes.
@@ -231,6 +231,7 @@ void handleCommand(void *conn, const char *buffer)
 		case 'F':
 			commandPacket.command = COMMAND_FORWARD;
 			uartSendPacket(&commandPacket);
+			printf("called from forward");
 			break;
 
 		case 'b':
@@ -287,6 +288,7 @@ void handleNetworkData(void *conn, const char *buffer, int len)
 
         tls_conn = conn; // This is used by sendNetworkData
 
+
 	if(buffer[0] == NET_COMMAND_PACKET)
 		handleCommand(conn, buffer);
 }
@@ -300,7 +302,9 @@ void *worker(void *conn)
 	while(networkActive)
 	{
 		/* TODO: Implement SSL read into buffer */
-        sslRead(conn, buffer, len);
+        len = sslRead(conn, buffer, BUF_LEN);
+
+        printf("Received %s\n", buffer);
 
 		/* END TODO */
 		// As long as we are getting data, network is active
@@ -312,6 +316,7 @@ void *worker(void *conn)
 			if(len < 0)
 				perror("ERROR READING NETWORK: ");
 	}
+
 
     // Reset tls_conn to NULL.
     tls_conn = NULL;
@@ -353,9 +358,9 @@ int main()
     /* TODO: Call createServer with the necessary parameters to do client authentication and to send
         Alex's certificate. Use the #define names you defined earlier  */
     
-    void (*foo)(void *);
-    foo = &worker;
-    createServer(privatekey, certificate, SERVER_PORT,  foo(tls_conn), certificatename, commonname, 1);
+    //void* (*foo)(void *);
+    //void * foo = &worker(tls_conn);
+    createServer(privatekey, certificate, SERVER_PORT,  &worker, certificatename, commonname, 1);
 
     /* TODO END */
 
