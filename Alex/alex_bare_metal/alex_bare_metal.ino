@@ -38,7 +38,8 @@ void dbprint(char *format, ...) {
 // Number of ticks per revolution from the 
 // wheel encoder.
 
-#define COUNTS_PER_REV      90
+#define COUNTS_PER_REV_LEFT      60
+#define COUNTS_PER_REV_RIGHT      400
 
 // Wheel circumference in cm.
 // We will use this to calculate forward/backward distance traveled 
@@ -228,10 +229,10 @@ void leftISR()
 {
   if (dir == FORWARD) {
     leftForwardTicks++;
-    forwardDist = (unsigned long) ((float) leftForwardTicks / COUNTS_PER_REV * WHEEL_CIRC);
+    forwardDist = (unsigned long) ((float) leftForwardTicks / COUNTS_PER_REV_LEFT * WHEEL_CIRC);
   } else if (dir == REVERSE) {
     leftReverseTicks++;
-    reverseDist = (unsigned long) ((float) leftReverseTicks / COUNTS_PER_REV * WHEEL_CIRC);
+    reverseDist = (unsigned long) ((float) leftReverseTicks / COUNTS_PER_REV_LEFT * WHEEL_CIRC);
   } else if (dir == LEFT) {
     leftReverseTicksTurns++;
   } else if (dir == RIGHT) {
@@ -245,10 +246,10 @@ void rightISR()
 {
   if (dir == FORWARD) {
     rightForwardTicks++;
-    forwardDist = (unsigned long) ((float) rightForwardTicks / COUNTS_PER_REV * WHEEL_CIRC);
+    forwardDist = (unsigned long) ((float) rightForwardTicks / COUNTS_PER_REV_RIGHT * WHEEL_CIRC);
   } else if (dir == REVERSE) {
     rightReverseTicks++;
-    reverseDist = (unsigned long) ((float) rightReverseTicks / COUNTS_PER_REV * WHEEL_CIRC);
+    reverseDist = (unsigned long) ((float) rightReverseTicks / COUNTS_PER_REV_RIGHT * WHEEL_CIRC);
   } else if (dir == LEFT) {
     rightForwardTicksTurns++;
   } else if (dir == RIGHT) {
@@ -358,6 +359,8 @@ ISR(TIMER2_COMPA_vect)
 }
 void setupMotors()
 {
+  DDRD |= 0b01100000;
+  DDRB |= 0b00001100;
   TCNT0 = 0;
   TCCR0A |= 0b11110001;
   TIMSK0 |= 0b00000110;
@@ -487,9 +490,9 @@ void reverse(float dist, float speed)
 }
 
 
-unsigned long computeDeltaTicks(float ang)
+unsigned long computeDeltaTicks(float ang, int counts)
 {
-  unsigned long ticks = (unsigned long) ((ang * alexCirc * COUNTS_PER_REV) / (360.0 * WHEEL_CIRC));
+  unsigned long ticks = (unsigned long) ((ang * alexCirc * counts) / (360.0 * WHEEL_CIRC));
 
   return ticks;
 }
@@ -511,7 +514,7 @@ void left(float ang, float speed)
   }
   else
   {
-    deltaTicks = computeDeltaTicks(ang);
+    deltaTicks = computeDeltaTicks(ang, COUNTS_PER_REV_LEFT);
   }
 
   targetTicks = leftReverseTicksTurns + deltaTicks;
@@ -547,7 +550,7 @@ void right(float ang, float speed)
   }
   else
   {
-    deltaTicks = computeDeltaTicks(ang);
+    deltaTicks = computeDeltaTicks(ang, COUNTS_PER_REV_RIGHT);
   }
   
   targetTicks = rightReverseTicksTurns + deltaTicks;
