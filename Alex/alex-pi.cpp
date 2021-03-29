@@ -47,6 +47,13 @@ void handleStatus(TPacket *packet)
 	printf("\n---------------------------------------\n\n");
 }
 
+void handleColour(TPacket* packet)
+{
+	printf("\n ------- COLOUR READING ------- \n\n");
+	printf("Colour:\t\t%d\n", packet->params[0]);
+	printf("\n---------------------------------------\n\n");
+}
+
 void handleResponse(TPacket *packet)
 {
 	// The response code is stored in command
@@ -58,6 +65,10 @@ void handleResponse(TPacket *packet)
 
 		case RESP_STATUS:
 			handleStatus(packet);
+		break;
+
+		case RESP_COLOUR:
+			handleColour(packet);
 		break;
 
 		default:
@@ -232,6 +243,11 @@ void sendCommand(char command)
 			exitFlag=1;
 			break;
 
+		case 'v':
+		case 'V':
+			commandPacket.command = COMMAND_COLOUR;
+			sendPacket(&commandPacket);
+			break;
 		default:
 			printf("Bad command\n");
 
@@ -262,7 +278,7 @@ int main()
 	while(!exitFlag)
 	{
 		char ch;
-		printf("Command (f=forward, b=reverse, l=turn left, r=turn right, s=stop, c=clear stats, g=get stats q=exit)\n");
+		printf("Command (f=forward, b=reverse, l=turn left, r=turn right, s=stop, c=clear stats, g=get stats, v=colour sense, q=exit)\n");
 		scanf("%c", &ch);
 
 		// Purge extraneous characters from input stream
