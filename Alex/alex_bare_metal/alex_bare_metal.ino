@@ -1,5 +1,6 @@
 #include <serialize.h>
 #include <stdarg.h>
+#include <avr/sleep.h>
 
 #include "packet.h"
 #include "constants.h"
@@ -8,6 +9,17 @@
 //#define PI 3.141592654
 #define ALEX_LENGTH 20
 #define ALEX_BREADTH 12
+
+//powermanagement
+#define PRR_TWI_MASK 0b10000000
+#define PRR_SPI_MASK 0b00000100
+#define ADCSRA_ADC_MASK 0b10000000
+#define PRR_ADC_MASK 0b00000001
+#define PRR_TIMER2_MASK 0b01000000
+#define PRR_TIMER0_MASK 0b00100000
+#define PRR_TIMER1_MASK 0b00010000
+#define SMCR_SLEEP_ENABLE_MASK 0b00000001
+#define SMCR_IDLE_MODE_MASK 0b11110001
 
 float alexDiagonal = 0.0;
 float alexCirc = 0.0;
@@ -89,6 +101,39 @@ unsigned long targetTicks;
  * Alex Communication Routines.
  * 
  */
+void WDT_off(void)
+{
+  MCUSR &= ~(1<<WDRF);
+
+  WDTCSR |= (1<<WDCE) | (1<<WDE);
+
+  WDTCSR =0x00;
+}
+
+void setupPowerSaving()
+{
+  WDTCSR = 0x00;
+  //PRR |= PRR_TWI_MASK;
+  PRR |= PRR_SPI_MASK;
+  ADCSRA &= 0b01111111;
+  PRR |= PRR_ADC_MASK;
+  SMCR &= SMCR_IDLE_MODE_MASK;
+  DDRB = 0b00100000;//output
+  PORTB = 0b00000000;//logic low
+}
+
+void putArduinoToIdle()
+{
+  PRR |= PRR_TIMER0_MASK;
+  PRR |= PRR_TIMER1_MASK;
+  PRR |= PRR_TIMER2_MASK;
+  SMCR |= SMCR_SLEEP_ENABLE_MASK;
+  sleep_cpu();
+  SMCR &= ~SMCR_SLEEP_ENABLE_MASK;
+  PRR &= PRR_TIMER0_MASK;
+  PRR &= PRR_TIMER1_MASK;
+  PRR &= PRR_TIMER2_MASK;
+}
  
 TResult readPacket(TPacket *packet)
 {
@@ -219,7 +264,7 @@ void enablePullups()
   // Use bare-metal to enable the pull-up resistors on pins
   // 2 and 3. These are pins PD2 and PD3 respectively.
   // We set bits 2 and 3 in DDRD to 0 to make them inputs.
-  DDRD |= 0b00000000; 
+  DDRD &= 0b11110011; 
   PORTD |= 0b00001100;
   
 }
@@ -718,6 +763,7 @@ void setup() {
   startMotors();
   enablePullups();
   initializeState();
+  setupPowerSaving();
   sei();
 }
 
@@ -761,6 +807,7 @@ void loop() {
   if(result == PACKET_OK)
   {
     handlePacket(&recvPacket);
+    putArduinoToIdle();//wake up
   }    
   else
   {
@@ -803,6 +850,7 @@ void loop() {
       newDist = 0;
       stop();
     }
+    putArduinoToIdle();//sleep
   }
 
 
@@ -835,6 +883,6 @@ void loop() {
       targetTicks = 0;
       stop();
     }
-    
+    putArduinoToIdle();//sleep
    }
 }
