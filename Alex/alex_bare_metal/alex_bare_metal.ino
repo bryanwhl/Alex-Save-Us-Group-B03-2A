@@ -17,7 +17,7 @@
 #define PRR_ADC_MASK 0b00000001
 #define PRR_TIMER2_MASK 0b01000000
 #define PRR_TIMER0_MASK 0b00100000
-#define PRR_TIMER1_MASK 0b00010000
+#define PRR_TIMER1_MASK 0b00001000
 #define SMCR_SLEEP_ENABLE_MASK 0b00000001
 #define SMCR_IDLE_MODE_MASK 0b11110001
 
@@ -51,7 +51,7 @@ void dbprint(char *format, ...) {
 // wheel encoder.
 
 #define COUNTS_PER_REV_LEFT      60
-#define COUNTS_PER_REV_RIGHT      400
+#define COUNTS_PER_REV_RIGHT      60
 
 // Wheel circumference in cm.
 // We will use this to calculate forward/backward distance traveled 
@@ -117,7 +117,8 @@ void setupPowerSaving()
   PRR |= PRR_SPI_MASK;
   ADCSRA &= 0b01111111;
   PRR |= PRR_ADC_MASK;
-  SMCR &= SMCR_IDLE_MODE_MASK;
+  SMCR |= 0b00000001;
+  SMCR &= 0b11110001;
   DDRB = 0b00100000;//output
   PORTB = 0b00000000;//logic low
 }
@@ -763,7 +764,7 @@ void setup() {
   startMotors();
   enablePullups();
   initializeState();
-  setupPowerSaving();
+  //setupPowerSaving();
   sei();
 }
 
@@ -807,7 +808,7 @@ void loop() {
   if(result == PACKET_OK)
   {
     handlePacket(&recvPacket);
-    putArduinoToIdle();//wake up
+    //putArduinoToIdle();//wake up
   }    
   else
   {
@@ -850,7 +851,7 @@ void loop() {
       newDist = 0;
       stop();
     }
-    putArduinoToIdle();//sleep
+    //putArduinoToIdle();//sleep
   }
 
 
@@ -883,6 +884,6 @@ void loop() {
       targetTicks = 0;
       stop();
     }
-    putArduinoToIdle();//sleep
+    //putArduinoToIdle();//sleep
    }
 }
