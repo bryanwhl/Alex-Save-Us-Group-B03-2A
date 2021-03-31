@@ -24,13 +24,47 @@
 float alexDiagonal = 0.0;
 float alexCirc = 0.0;
 
+//colour sensing
+#include <Wire.h>
+#include "SFE_ISL29125.h"
+#include <Adafruit_NeoPixel.h>
+
+#define LEDSTRIP 8
+unsigned long time_now = 0;
+// Declare sensor object
+SFE_ISL29125 RGB_sensor;
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(8, LEDSTRIP, NEO_GRB + NEO_KHZ800);
+volatile char colour;
+unsigned int red = 0;
+unsigned int green = 0;
+unsigned int blue = 0;
+  
+void turnOn() {
+  for(uint16_t i=0; i<strip.numPixels(); i++) {
+    strip.setPixelColor(i, strip.Color(255, 255, 255));
+    strip.show();
+
+  }
+}
+
+void turnOff() {
+  for(uint16_t i=0; i<strip.numPixels(); i++) {
+    strip.setPixelColor(i, strip.Color(0, 0, 0));
+    strip.show();
+
+  }
+}
+
+/////
+
 typedef enum
 {
 STOP=0,
 FORWARD=1,
 REVERSE=2,
 LEFT=3,
-RIGHT=4
+RIGHT=4,
+COLOUR = 5
 } TDirection;
 
 volatile TDirection dir = STOP;
@@ -176,6 +210,44 @@ void sendStatus()
   statusPacket.params[7] = rightReverseTicksTurns;
   statusPacket.params[8] = forwardDist;
   statusPacket.params[9] = reverseDist;
+
+  sendResponse(&statusPacket);
+}
+
+void sendColour(char c)
+{
+  //sense colour
+  turnOn();
+  time_now = millis();   
+  while(millis() < time_now + 100);
+
+  red = 0;
+  green = 0;
+  blue = 0;
+
+  for (int i = 0; i < 10; i ++)
+  {
+    red += RGB_sensor.readRed();
+    green += RGB_sensor.readGreen();
+    blue += RGB_sensor.readBlue();
+  }
+  red /= 10;
+  green/=10;
+  blue /= 10;
+  if (red > green)
+  {
+    c = 'R';
+    
+  }
+  else
+  {
+    c = 'G';
+  }
+  
+  TPacket statusPacket;
+  statusPacket.packetType = PACKET_TYPE_RESPONSE;
+  statusPacket.command = COMMAND_COLOUR;
+  statusPacket.params[0] = c;
 
   sendResponse(&statusPacket);
 }
@@ -707,6 +779,11 @@ void handleCommand(TPacket *command)
       clearOneCounter(command->params[8]);
       clearOneCounter(command->params[9]);
       break;
+      
+    case COMMAND_COLOUR:
+      sendOK();
+      sendColour(colour);
+      break;
 
     default:
       sendBadCommand();
@@ -755,6 +832,20 @@ void setup() {
 
   alexDiagonal = sqrt((ALEX_LENGTH * ALEX_LENGTH) + (ALEX_BREADTH * ALEX_BREADTH));
   alexCirc = PI * alexDiagonal;
+  
+  red  = 0;
+  green = 0;
+  blue = 0;
+  // Initialize the ISL29125 with simple configuration so it starts sampling
+  if (RGB_sensor.init())
+  {
+    //Serial.println("Sensor Initialization Successful\n\r");
+  }
+
+  strip.begin();
+  strip.show();
+  //set pin 8 as output
+  DDRB |= 0b00000001;
   
   cli();
   setupEINT();
