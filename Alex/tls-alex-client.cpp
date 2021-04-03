@@ -162,7 +162,7 @@ void *writerThread(void *conn)
 	while(!quit)
 	{
 		char ch;
-		printf("Command (f=forward, b=reverse, l=turn left, r=turn right, s=stop, c=clear stats, g=get stats q=exit)\n");
+		printf("Command (f=forward, b=reverse, l=turn left, r=turn right, s=stop, c=clear stats, v=colour sense, g=get stats q=exit)\n");
 		scanf("%c", &ch);
 
 		// Purge extraneous characters from input stream
@@ -193,6 +193,8 @@ void *writerThread(void *conn)
 			case 'C':
 			case 'g':
 			case 'G':
+			case 'v':
+			case 'V':
 					params[0]=0;
 					params[1]=0;
 					memcpy(&buffer[2], params, sizeof(params));
