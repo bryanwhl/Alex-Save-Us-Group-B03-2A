@@ -141,6 +141,8 @@ unsigned long enc_r_prev;
 float num_rev;
 unsigned long target_count_left;
 unsigned long target_count_right;
+unsigned long timeNow;
+const int motor_offset = 5; 
   
 /*
  * 
@@ -545,17 +547,6 @@ int pwmVal(float speed)
 // continue moving forward indefinitely.
 void forward(float dist, float speed)
 {
-//  if (dist > 0)
-//  {
-//    deltaDist = dist;
-//    
-//  }
-//  else
-//  {
-//    deltaDist = 9999999;
-//  }
-//
-//  newDist = forwardDist + deltaDist;
   dir = FORWARD;
   
   val = pwmVal(speed);
@@ -566,17 +557,8 @@ void forward(float dist, float speed)
   enc_r_prev = rightForwardTicks;
 
   num_rev = dist / WHEEL_CIRC;
-  target_count_left = num_rev * COUNTS_PER_REV_LEFT;
-  target_count_right = num_rev * COUNTS_PER_REV_RIGHT;
-
-  // LF = Left forward pin, LR = Left reverse pin
-  // RF = Right forward pin, RR = Right reverse pin
-  // This will be replaced later with bare-metal code.
-
-//  OCR0A = val;//LF
-//  OCR1B = val; //RF
-//  OCR0B = 0; //LR
-//  OCR2A = 0; //RR
+  target_count_left = (num_rev * COUNTS_PER_REV_LEFT) + leftForwardTicks;
+  target_count_right = (num_rev * COUNTS_PER_REV_RIGHT) + rightForwardTicks;
 
 }
 
@@ -587,37 +569,22 @@ void forward(float dist, float speed)
 // continue reversing indefinitely.
 void reverse(float dist, float speed)
 {
-//  if (dist > 0)
-//  {
-//    deltaDist = dist;
-//    
-//  }
-//  else
-//  {
-//    deltaDist = 9999999;
-//  }
-//
-//  newDist = deltaDist + reverseDist;
-  
   dir = REVERSE;
-  int val = pwmVal(speed);
+  val = pwmVal(speed);
+  power_l = -val;
+  power_r = -val;
 
-  // For now we will ignore dist and 
-  // reverse indefinitely. We will fix this
-  // in Week 9.
-
-  // LF = Left forward pin, LR = Left reverse pin
-  // RF = Right forward pin, RR = Right reverse pin
-  // This will be replaced later with bare-metal code.
-//  analogWrite(LR, val);
-//  analogWrite(RR, val);
-//  analogWrite(LF, 0);
-//  analogWrite(RF, 0);
-
-  OCR0A = 0;//LF
-  OCR1B = 0; //RF
-  OCR0B = val; //LR
-  OCR2A = val; //RR
+  enc_l_prev = leftReverseTicks;
+  enc_r_prev = rightReverseTicks;
+  
+  num_rev = dist / WHEEL_CIRC;
+  target_count_left = (num_rev * COUNTS_PER_REV_LEFT) + leftReverseTicks;
+  target_count_right = (num_rev * COUNTS_PER_REV_RIGHT) + rightReverseTicks;
+  
+//  OCR0A = 0;//LF
+//  OCR1B = 0; //RF
+//  OCR0B = val; //LR
+//  OCR2A = val; //RR
 }
 
 
@@ -635,33 +602,22 @@ unsigned long computeDeltaTicks(float ang, int counts)
 // turn left indefinitely.
 void left(float ang, float speed)
 {
-  
   dir = LEFT;
-  int val = pwmVal(speed);
+  val = pwmVal(speed);
+  power_l = -val;
+  power_r = val;
 
-  if (ang == 0)
-  {
-    deltaTicks = 99999999;
-  }
-  else
-  {
-    deltaTicks = computeDeltaTicks(ang, COUNTS_PER_REV_LEFT);
-  }
-
-  targetTicks = leftReverseTicksTurns + deltaTicks;
+  enc_l_prev = leftReverseTicks;
+  enc_r_prev = rightReverseTicks;
   
-  // For now we will ignore ang. We will fix this in We
-  // We will also replace this code with bare-metal later.
-  // To turn left we reverse the left wheel and move
-  // the right wheel forward.
-//  analogWrite(LR, val);
-//  analogWrite(RF, val);
-//  analogWrite(LF, 0);
-//  analogWrite(RR, 0);
-  OCR0A = 0;//LF
-  OCR1B = val; //RF
-  OCR0B = val; //LR
-  OCR2A = 0; //RR
+  num_rev = dist / WHEEL_CIRC;
+  target_count_left = (num_rev * COUNTS_PER_REV_LEFT) + leftReverseTicksTurns;
+  target_count_right = (num_rev * COUNTS_PER_REV_RIGHT) + rightForwardTicksTurns;
+  
+//  OCR0A = 0;//LF
+//  OCR1B = val; //RF
+//  OCR0B = val; //LR
+//  OCR2A = 0; //RR
 }
 
 // Turn Alex right "ang" degrees at speed "speed".
@@ -671,32 +627,22 @@ void left(float ang, float speed)
 // turn right indefinitely.
 void right(float ang, float speed)
 {
+  dir = RIGHT;
+  val = pwmVal(speed);
+  power_l = val;
+  power_r = -val;
 
-   dir = RIGHT;
-  int val = pwmVal(speed);
+  enc_l_prev = leftReverseTicks;
+  enc_r_prev = rightReverseTicks;
   
-  if (ang == 0)
-  {
-    deltaTicks = 99999999;
-  }
-  else
-  {
-    deltaTicks = computeDeltaTicks(ang, COUNTS_PER_REV_RIGHT);
-  }
-  
-  targetTicks = rightReverseTicksTurns + deltaTicks;
-
-  // We will also replace this code with bare-metal later.
-  // To turn right we reverse the right wheel and move
-  // the left wheel forward.
-//  analogWrite(RR, val);
-//  analogWrite(LF, val);
-//  analogWrite(LR, 0);
-//  analogWrite(RF, 0);
-  OCR0A = val;//LF
-  OCR1B = 0; //RF
-  OCR0B = 0; //LR
-  OCR2A = val; //RR
+  num_rev = dist / WHEEL_CIRC;
+  target_count_left = (num_rev * COUNTS_PER_REV_LEFT) + leftForwardTicksTurns;
+  target_count_right = (num_rev * COUNTS_PER_REV_RIGHT) + rightReverseTicksTurns;
+ 
+//  OCR0A = val;//LF
+//  OCR1B = 0; //RF
+//  OCR0B = 0; //LR
+//  OCR2A = val; //RR
 }
 
 // Alex. To replace with bare-metal code later.
@@ -706,6 +652,7 @@ void stop()
 //  analogWrite(LR, 0);
 //  analogWrite(RF, 0);
 //  analogWrite(RR, 0);
+  dir = STOP;
   OCR0A = 0;//LF
   OCR1B = 0; //RF
   OCR0B = 0; //LR
@@ -842,7 +789,7 @@ void waitForHello()
 
 void setup() {
   // put your setup code here, to run once:
-
+  timeNow = millis();
   alexDiagonal = sqrt((ALEX_LENGTH * ALEX_LENGTH) + (ALEX_BREADTH * ALEX_BREADTH));
   alexCirc = PI * alexDiagonal;
   
@@ -894,6 +841,103 @@ void handlePacket(TPacket *packet)
   }
 }
 
+
+void drive(int power_l, power_r)
+{
+  power_l = constrain(power_l, -255, 255);
+  power_r = constrain(power_r, -255, 255); 
+
+  if (power_l < 0)
+  {
+    OCR0B = abs(power_l); 
+    OCR0A = 0;   
+  }
+  else
+  {
+    OCR0A = power_l;
+    OCR0B = 0;
+  }
+
+  if (power_r < 0)
+  {
+    OCR2A = abs(power_r);
+    OCR1A = 0;
+  }
+  else
+  {
+    OCR1A = power_r;
+    OCR2A = 0;
+  }
+}
+
+
+void adjustMove(TDirection dir)
+{
+  int left_dir_ticks;
+  int right_dir_ticks;
+  
+  if (dir == FORWARD)
+  {
+    left_dir_ticks = leftForwardTicks;
+    right_dir_ticks = rightForwardTicks;
+  }
+
+  else if (dir == REVERSE)
+  {
+    left_dir_ticks = leftReverseTicks;
+    right_dir_ticks = rightReverseTicks;
+  }
+  else if (dir == LEFT)
+  {
+    left_dir_ticks = leftReverseTicksTurns;
+    right_dir_ticks = rightForwardTicksTurns;
+  }
+  else if (dir == RIGHT)
+  {
+    left_dir_ticks = leftForwardTicksTurns;
+    right_dir_ticks = rightReverseTicksTurns;
+  }
+    
+    if ( (left_dir_ticks < target_count_left) && (right_dir_ticks < target_count_right) ) 
+  {
+
+    // Sample number of encoder ticks
+    num_ticks_l = left_dir_ticks;
+    num_ticks_r = right_dir_ticks;
+
+    // Drive
+    
+    drive(power_l, power_r);
+
+    // Number of ticks counted since last time
+    diff_l = num_ticks_l - enc_l_prev;
+    diff_r = num_ticks_r - enc_r_prev;
+
+    // Store current tick counter for next time
+    enc_l_prev = num_ticks_l;
+    enc_r_prev = num_ticks_r;
+
+    // If left is faster, slow it down and speed up right
+    if ( diff_l > diff_r  && millis() - timeNow >= 20) {
+      power_l -= motor_offset;
+      power_r += motor_offset;
+      timeNow = millis();
+    }
+
+    // If right is faster, slow it down and speed up left
+    if ( diff_l < diff_r && millis() - timeNow >= 20) {
+      power_l += motor_offset;
+      power_r -= motor_offset;
+      timeNow = millis();
+    }
+
+    drive(power_l, power_r);
+  }
+
+  // Brake
+  stop();
+}
+
 void loop() {
 
 // Uncomment the code below for Step 2 of Activity 3 in Week 8 Studio 2
@@ -927,68 +971,14 @@ void loop() {
     } 
   }
 
-//  if (deltaDist > 0)
-//  {
-    if (dir == FORWARD)
+    if (dir == STOP)
     {
-      if (forwardDist > newDist)
-      {
-        deltaDist = 0;
-        newDist = 0;
-        stop();
-      }
-      
-    }
 
-    else if (dir == REVERSE)
-    {
-       if (reverseDist > newDist)
-       {
-         deltaDist = 0;
-         newDist = 0;
-         stop();          
-       }
-    }
-    else if (dir == STOP)
-    {
-      deltaDist = 0;
-      newDist = 0;
       stop();
     }
-    //putArduinoToIdle();//sleep
-//  }
-
-
-
-//   if (deltaTicks > 0)
-//   {
-    if (dir == LEFT)
+    else
     {
-      if (leftReverseTicksTurns >= targetTicks)
-      {
-        deltaTicks = 0;
-        targetTicks = 0;
-        stop();
-      }
+      adjustMove(dir);
     }
-
-    else if (dir == RIGHT)
-    {
-      if (rightReverseTicksTurns >= targetTicks)
-      {
-        deltaTicks = 0;
-        targetTicks = 0;
-        stop();
-      }
-    }
-
-    else if (dir == STOP)
-    {
-      deltaTicks = 0;
-      targetTicks = 0;
-      stop();
-    }
-    //putArduinoToIdle();//sleep
-//   }
 
 }
