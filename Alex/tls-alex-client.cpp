@@ -40,6 +40,16 @@ void handleError(const char *buffer)
 	}
 }
 
+void handleColour(const char* buffer)
+{
+	int32_t data[16];
+	memcpy(data, &buffer[1], sizeof(data));
+
+	printf("\n ------- ALEX COLOUR SENSE ------- \n\n");
+	printf("Colour:\t\t%d\n", data[0]);
+	printf("\n---------------------------------------\n\n");
+
+}
 void handleStatus(const char *buffer)
 {
 	int32_t data[16];
@@ -93,6 +103,10 @@ void handleNetwork(const char *buffer, int len)
 		case NET_COMMAND_PACKET:
 		handleCommand(buffer);
 		break;
+
+		case NET_COLOUR_PACKET:
+			handleColour(buffer);
+			break;
 	}
 }
 

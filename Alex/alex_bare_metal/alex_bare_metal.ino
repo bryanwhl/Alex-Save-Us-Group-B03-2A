@@ -246,7 +246,7 @@ void sendColour(char c)
   
   TPacket statusPacket;
   statusPacket.packetType = PACKET_TYPE_RESPONSE;
-  statusPacket.command = COMMAND_COLOUR;
+  statusPacket.command = RESP_COLOUR; //COMMAND_COLOUR
   statusPacket.params[0] = c;
 
   sendResponse(&statusPacket);
@@ -781,7 +781,7 @@ void handleCommand(TPacket *command)
       break;
       
     case COMMAND_COLOUR:
-      sendOK();
+//      sendOK();
       sendColour(colour);
       break;
 
