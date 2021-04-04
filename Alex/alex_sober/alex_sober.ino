@@ -260,9 +260,10 @@ void sendColour(char c)
   
   TPacket statusPacket;
   statusPacket.packetType = PACKET_TYPE_RESPONSE;
-  statusPacket.command = COMMAND_COLOUR;
+  statusPacket.command = RESP_COLOUR;//COMMAND_COLOUR;
   statusPacket.params[0] = c;
 
+  turnOff();
   sendResponse(&statusPacket);
 }
 

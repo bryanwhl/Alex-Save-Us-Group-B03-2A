@@ -249,6 +249,7 @@ void sendColour(char c)
   statusPacket.command = RESP_COLOUR; //COMMAND_COLOUR
   statusPacket.params[0] = c;
 
+  turnOff();
   sendResponse(&statusPacket);
 }
 
