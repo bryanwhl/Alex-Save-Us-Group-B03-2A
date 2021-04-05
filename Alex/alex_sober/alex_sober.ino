@@ -845,8 +845,8 @@ void handlePacket(TPacket *packet)
 
 void drive(int power_l, int power_r)
 {
-  power_l = constrain(power_l, -255, 255);
-  power_r = constrain(power_r, -255, 255); 
+//  power_l = constrain(power_l, -255, 255);
+//  power_r = constrain(power_r, -255, 255); 
 
   if (power_l < 0)
   {
@@ -868,6 +868,113 @@ void drive(int power_l, int power_r)
   {
     OCR1A = power_r;
     OCR2A = 0;
+  }
+}
+
+void slower_l()
+{
+  if (power_l >= 0)
+  {
+    if (power_l - motor_offset >= 0)
+    {
+      power_l -= motor_offset;  
+    }
+    else
+    {
+      power_l = 0;
+    }
+  }
+
+  else
+  {
+    if (power_l + motor_offset >= 0)
+    {
+      power_l = 0;
+    }
+    else
+    {
+      power_l += motor_offset;
+    }
+  }
+}
+
+
+void slower_r()
+{
+  if (power_r >= 0)
+  {
+    if (power_r - motor_offset >= 0)
+    {
+      power_r -= motor_offset;  
+    }
+    else
+    {
+      power_r = 0;
+    }
+  }
+
+  else
+  {
+    if (power_r + motor_offset >= 0)
+    {
+      power_r = 0;
+    }
+    else
+    {
+      power_r += motor_offset;
+    }
+  }
+}
+
+void faster_r()
+{
+  if (power_r >= 0)
+  {
+    if (power_r + motor_offset >= 255)
+    {
+      power_r = 255;
+    }
+    else
+    {
+      power_r += motor_offset;
+    }
+  }
+  else
+  {
+    if (power_r - motor_offset <= -255)
+    {
+      power_r = -255;
+    }
+    else
+    {
+      power_r -= motor_offset;
+    }
+  }
+}
+
+void faster_l()
+{
+  if (power_l >= 0)
+  {
+    if (power_l + motor_offset >= 255)
+    {
+      power_l = 255;
+    }
+    else
+    {
+      power_l += motor_offset;
+    }
+  }
+  else
+  {
+    if (power_l - motor_offset <= -255)
+    {
+      power_l = -255;
+    }
+    else
+    {
+      power_l -= motor_offset;
+    }
   }
 }
 
@@ -908,7 +1015,7 @@ void adjustMove()
 
     // Drive
     
-    drive(power_l, power_r);
+//    drive(power_l, power_r);
 
     // Number of ticks counted since last time
     diff_l = num_ticks_l - enc_l_prev;
@@ -920,15 +1027,19 @@ void adjustMove()
 
     // If left is faster, slow it down and speed up right
     if ( (float)diff_l / COUNTS_PER_REV_LEFT > (float)diff_r / COUNTS_PER_REV_RIGHT  && millis() - timeNow >= 20) {
-      power_l -= motor_offset;
-      power_r += motor_offset;
+//      power_l -= motor_offset;
+//      power_r += motor_offset;
+        slower_l();
+        faster_r();
       timeNow = millis();
     }
 
     // If right is faster, slow it down and speed up left
     if ( (float)diff_l / COUNTS_PER_REV_LEFT < (float)diff_r / COUNTS_PER_REV_RIGHT && millis() - timeNow >= 20) {
-      power_l += motor_offset;
-      power_r -= motor_offset;
+//      power_l += motor_offset;
+//      power_r -= motor_offset;
+        faster_l();
+        slower_r();
       timeNow = millis();
     }
 
