@@ -59,12 +59,12 @@ void turnOff() {
 
 typedef enum
 {
-STOP=0,
-FORWARD=1,
-REVERSE=2,
-LEFT=3,
-RIGHT=4,
-COLOUR = 5
+STOP,
+FORWARD,
+REVERSE,
+LEFT,
+RIGHT,
+COLOUR
 } TDirection;
 
 volatile TDirection dir = STOP;
@@ -84,8 +84,8 @@ void dbprint(char *format, ...) {
 // Number of ticks per revolution from the 
 // wheel encoder.
 
-#define COUNTS_PER_REV_LEFT      60
-#define COUNTS_PER_REV_RIGHT      60
+#define COUNTS_PER_REV_LEFT      137
+#define COUNTS_PER_REV_RIGHT     210
 
 // Wheel circumference in cm.
 // We will use this to calculate forward/backward distance traveled 
@@ -611,7 +611,7 @@ void left(float ang, float speed)
   enc_l_prev = leftReverseTicks;
   enc_r_prev = rightReverseTicks;
   
-  num_rev = dist / WHEEL_CIRC;
+  num_rev = ang/360;
   target_count_left = (num_rev * COUNTS_PER_REV_LEFT) + leftReverseTicksTurns;
   target_count_right = (num_rev * COUNTS_PER_REV_RIGHT) + rightForwardTicksTurns;
   
@@ -636,7 +636,7 @@ void right(float ang, float speed)
   enc_l_prev = leftReverseTicks;
   enc_r_prev = rightReverseTicks;
   
-  num_rev = dist / WHEEL_CIRC;
+  num_rev = (ang/360); //* WHEEL_CIRC;
   target_count_left = (num_rev * COUNTS_PER_REV_LEFT) + leftForwardTicksTurns;
   target_count_right = (num_rev * COUNTS_PER_REV_RIGHT) + rightReverseTicksTurns;
  
@@ -843,7 +843,7 @@ void handlePacket(TPacket *packet)
 }
 
 
-void drive(int power_l, power_r)
+void drive(int power_l, int power_r)
 {
   power_l = constrain(power_l, -255, 255);
   power_r = constrain(power_r, -255, 255); 
@@ -872,7 +872,7 @@ void drive(int power_l, power_r)
 }
 
 
-void adjustMove(TDirection dir)
+void adjustMove()
 {
   int left_dir_ticks;
   int right_dir_ticks;
@@ -979,7 +979,7 @@ void loop() {
     }
     else
     {
-      adjustMove(dir);
+      adjustMove();
     }
 
 }

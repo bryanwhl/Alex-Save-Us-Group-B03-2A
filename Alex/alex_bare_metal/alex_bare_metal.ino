@@ -67,7 +67,7 @@ RIGHT=4,
 COLOUR = 5
 } TDirection;
 
-volatile TDirection dir = STOP;
+volatile TDirection dir = FORWARD;
 
 void dbprint(char *format, ...) {
   va_list args;
@@ -84,8 +84,8 @@ void dbprint(char *format, ...) {
 // Number of ticks per revolution from the 
 // wheel encoder.
 
-#define COUNTS_PER_REV_LEFT      135
-#define COUNTS_PER_REV_RIGHT     200
+#define COUNTS_PER_REV_LEFT      137
+#define COUNTS_PER_REV_RIGHT     210
 
 // Wheel circumference in cm.
 // We will use this to calculate forward/backward distance traveled 
