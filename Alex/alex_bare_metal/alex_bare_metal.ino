@@ -84,8 +84,8 @@ void dbprint(char *format, ...) {
 // Number of ticks per revolution from the 
 // wheel encoder.
 
-#define COUNTS_PER_REV_LEFT      60
-#define COUNTS_PER_REV_RIGHT      60
+#define COUNTS_PER_REV_LEFT      135
+#define COUNTS_PER_REV_RIGHT     200
 
 // Wheel circumference in cm.
 // We will use this to calculate forward/backward distance traveled 
@@ -137,24 +137,28 @@ unsigned long targetTicks;
  */
 void WDT_off(void)
 {
+  cli();
+  
   MCUSR &= ~(1<<WDRF);
 
   WDTCSR |= (1<<WDCE) | (1<<WDE);
 
   WDTCSR =0x00;
+
+  EIMSK |= 0b00000011;
 }
 
 void setupPowerSaving()
 {
-  WDTCSR = 0x00;
+  
+  WDT_off();
   //PRR |= PRR_TWI_MASK;
   PRR |= PRR_SPI_MASK;
   ADCSRA &= 0b01111111;
   PRR |= PRR_ADC_MASK;
-  SMCR |= 0b00000001;
-  SMCR &= 0b11110001;
-  DDRB = 0b00100000;//output
-  PORTB = 0b00000000;//logic low
+  SMCR &= SMCR_IDLE_MODE_MASK;
+  DDRB |= 0b00100000;//output
+  PORTB &= 0b11011111;//logic low
 }
 
 void putArduinoToIdle()
@@ -635,7 +639,7 @@ void left(float ang, float speed)
     deltaTicks = computeDeltaTicks(ang, COUNTS_PER_REV_LEFT);
   }
 
-  targetTicks = leftReverseTicksTurns + deltaTicks;
+  targetTicks = (leftReverseTicksTurns + deltaTicks)/2;
   
   // For now we will ignore ang. We will fix this in We
   // We will also replace this code with bare-metal later.
@@ -671,7 +675,7 @@ void right(float ang, float speed)
     deltaTicks = computeDeltaTicks(ang, COUNTS_PER_REV_RIGHT);
   }
   
-  targetTicks = rightReverseTicksTurns + deltaTicks;
+  targetTicks = (rightReverseTicksTurns + deltaTicks)/2;
 
   // We will also replace this code with bare-metal later.
   // To turn right we reverse the right wheel and move
@@ -693,10 +697,12 @@ void stop()
 //  analogWrite(LR, 0);
 //  analogWrite(RF, 0);
 //  analogWrite(RR, 0);
+  dir = STOP;
   OCR0A = 0;//LF
   OCR1B = 0; //RF
   OCR0B = 0; //LR
   OCR2A = 0; //RR
+  //putArduinoToIdle();
 }
 
 /*
@@ -899,7 +905,6 @@ void loop() {
   if(result == PACKET_OK)
   {
     handlePacket(&recvPacket);
-    //putArduinoToIdle();//wake up
   }    
   else
   {
@@ -942,7 +947,6 @@ void loop() {
       newDist = 0;
       stop();
     }
-    //putArduinoToIdle();//sleep
   }
 
 
@@ -975,6 +979,5 @@ void loop() {
       targetTicks = 0;
       stop();
     }
-    //putArduinoToIdle();//sleep
    }
 }
