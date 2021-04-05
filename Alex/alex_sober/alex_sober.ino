@@ -935,8 +935,13 @@ void adjustMove()
     drive(power_l, power_r);
   }
 
-  // Brake
-  stop();
+  else
+  {
+    // Brake
+    stop();
+  }
+
+  
 }
 
 void loop() {
