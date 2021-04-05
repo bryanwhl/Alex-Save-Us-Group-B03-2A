@@ -67,7 +67,7 @@ RIGHT=4,
 COLOUR=5
 } TDirection;
 
-volatile TDirection dir = STOP;
+volatile TDirection dir = FORWARD;
 
 void dbprint(char *format, ...) {
   va_list args;
