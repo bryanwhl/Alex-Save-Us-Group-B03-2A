@@ -59,12 +59,12 @@ void turnOff() {
 
 typedef enum
 {
-STOP,
-FORWARD,
-REVERSE,
-LEFT,
-RIGHT,
-COLOUR
+STOP=0,
+FORWARD=1,
+REVERSE=2,
+LEFT=3,
+RIGHT=4,
+COLOUR=5
 } TDirection;
 
 volatile TDirection dir = STOP;
