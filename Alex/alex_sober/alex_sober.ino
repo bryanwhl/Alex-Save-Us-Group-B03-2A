@@ -870,11 +870,11 @@ void drive()
   if (power_r < 0)
   {
     OCR2A = abs(power_r);
-    OCR1A = 0;
+    OCR1B = 0;
   }
   else
   {
-    OCR1A = power_r;
+    OCR1B = power_r;
     OCR2A = 0;
   }
 }
