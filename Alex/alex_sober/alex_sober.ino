@@ -142,6 +142,7 @@ float num_rev;
 unsigned long target_count_left;
 unsigned long target_count_right;
 unsigned long timeNow;
+unsigned long commandTime;
 const int motor_offset = 5; 
   
 /*
@@ -560,7 +561,8 @@ void forward(float dist, float speed)
   num_rev = dist / WHEEL_CIRC;
   target_count_left = (num_rev * COUNTS_PER_REV_LEFT) + leftForwardTicks;
   target_count_right = (num_rev * COUNTS_PER_REV_RIGHT) + rightForwardTicks;
-
+  commandTime = millis();
+  drive();
 }
 
 // Reverse Alex "dist" cm at speed "speed".
@@ -581,7 +583,8 @@ void reverse(float dist, float speed)
   num_rev = dist / WHEEL_CIRC;
   target_count_left = (num_rev * COUNTS_PER_REV_LEFT) + leftReverseTicks;
   target_count_right = (num_rev * COUNTS_PER_REV_RIGHT) + rightReverseTicks;
-  
+  commandTime = millis();
+  drive();
 //  OCR0A = 0;//LF
 //  OCR1B = 0; //RF
 //  OCR0B = val; //LR
@@ -611,10 +614,12 @@ void left(float ang, float speed)
   enc_l_prev = leftReverseTicks;
   enc_r_prev = rightReverseTicks;
   
-  num_rev = ang/360;
-  target_count_left = (num_rev * COUNTS_PER_REV_LEFT) + leftReverseTicksTurns;
-  target_count_right = (num_rev * COUNTS_PER_REV_RIGHT) + rightForwardTicksTurns;
-  
+  //num_rev = ang/360;
+  target_count_left = computeDeltaTicks(ang, COUNTS_PER_REV_LEFT) + leftReverseTicksTurns;//(num_rev * COUNTS_PER_REV_LEFT) + leftReverseTicksTurns;
+  target_count_right = computeDeltaTicks(ang, COUNTS_PER_REV_RIGHT) + rightForwardTicksTurns; //(num_rev * COUNTS_PER_REV_RIGHT) + rightForwardTicksTurns;
+
+  commandTime = millis();
+  drive();
 //  OCR0A = 0;//LF
 //  OCR1B = val; //RF
 //  OCR0B = val; //LR
@@ -636,10 +641,12 @@ void right(float ang, float speed)
   enc_l_prev = leftReverseTicks;
   enc_r_prev = rightReverseTicks;
   
-  num_rev = (ang/360); //* WHEEL_CIRC;
-  target_count_left = (num_rev * COUNTS_PER_REV_LEFT) + leftForwardTicksTurns;
-  target_count_right = (num_rev * COUNTS_PER_REV_RIGHT) + rightReverseTicksTurns;
- 
+//  num_rev = (ang/360); //* WHEEL_CIRC;
+  target_count_left = computeDeltaTicks(ang, COUNTS_PER_REV_LEFT) + leftForwardTicksTurns;//(num_rev * COUNTS_PER_REV_LEFT) + leftForwardTicksTurns;
+  target_count_right = computeDeltaTicks(ang, COUNTS_PER_REV_RIGHT) + rightReverseTicksTurns;//(num_rev * COUNTS_PER_REV_RIGHT) + rightReverseTicksTurns;
+
+  commandTime = millis();
+  drive();
 //  OCR0A = val;//LF
 //  OCR1B = 0; //RF
 //  OCR0B = 0; //LR
@@ -791,6 +798,7 @@ void waitForHello()
 void setup() {
   // put your setup code here, to run once:
   timeNow = millis();
+  commandTime = millis();
   alexDiagonal = sqrt((ALEX_LENGTH * ALEX_LENGTH) + (ALEX_BREADTH * ALEX_BREADTH));
   alexCirc = PI * alexDiagonal;
   
@@ -843,7 +851,7 @@ void handlePacket(TPacket *packet)
 }
 
 
-void drive(int power_l, int power_r)
+void drive()
 {
 //  power_l = constrain(power_l, -255, 255);
 //  power_r = constrain(power_r, -255, 255); 
@@ -1015,7 +1023,7 @@ void adjustMove()
 
     // Drive
     
-//    drive(power_l, power_r);
+//    drive();
 
     // Number of ticks counted since last time
     diff_l = num_ticks_l - enc_l_prev;
@@ -1026,7 +1034,7 @@ void adjustMove()
     enc_r_prev = num_ticks_r;
 
     // If left is faster, slow it down and speed up right
-    if ( (float)diff_l / COUNTS_PER_REV_LEFT > (float)diff_r / COUNTS_PER_REV_RIGHT  && millis() - timeNow >= 20) {
+    if ( (float)diff_l / COUNTS_PER_REV_LEFT > (float)diff_r / COUNTS_PER_REV_RIGHT  && millis() - timeNow >= 20 && millis() - commandTime >= 500) {
 //      power_l -= motor_offset;
 //      power_r += motor_offset;
         slower_l();
@@ -1035,7 +1043,7 @@ void adjustMove()
     }
 
     // If right is faster, slow it down and speed up left
-    if ( (float)diff_l / COUNTS_PER_REV_LEFT < (float)diff_r / COUNTS_PER_REV_RIGHT && millis() - timeNow >= 20) {
+    if ( (float)diff_l / COUNTS_PER_REV_LEFT < (float)diff_r / COUNTS_PER_REV_RIGHT && millis() - timeNow >= 20 && millis() - commandTime >= 500) {
 //      power_l += motor_offset;
 //      power_r -= motor_offset;
         faster_l();
@@ -1043,7 +1051,7 @@ void adjustMove()
       timeNow = millis();
     }
 
-    drive(power_l, power_r);
+    drive();
   }
 
   else
