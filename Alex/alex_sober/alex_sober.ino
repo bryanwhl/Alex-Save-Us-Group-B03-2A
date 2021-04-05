@@ -919,14 +919,14 @@ void adjustMove()
     enc_r_prev = num_ticks_r;
 
     // If left is faster, slow it down and speed up right
-    if ( diff_l > diff_r  && millis() - timeNow >= 20) {
+    if ( (float)diff_l / COUNTS_PER_REV_LEFT > (float)diff_r / COUNTS_PER_REV_RIGHT  && millis() - timeNow >= 20) {
       power_l -= motor_offset;
       power_r += motor_offset;
       timeNow = millis();
     }
 
     // If right is faster, slow it down and speed up left
-    if ( diff_l < diff_r && millis() - timeNow >= 20) {
+    if ( (float)diff_l / COUNTS_PER_REV_LEFT < (float)diff_r / COUNTS_PER_REV_RIGHT && millis() - timeNow >= 20) {
       power_l += motor_offset;
       power_r -= motor_offset;
       timeNow = millis();
