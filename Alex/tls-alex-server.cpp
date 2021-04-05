@@ -65,6 +65,15 @@ void handleMessage(TPacket *packet)
 	sendNetworkData(data, sizeof(data));
 }
 
+void handleColour(Tpacket* packet)
+{
+	char data[65];
+	printf("UART COLOUR PACKET\n");
+	data[0] = NET_COLOUR_PACKET;
+	memcpy(&data[1], packet->params, sizeof(packet->params));
+	sendNetworkData(data, sizeof(data));
+}
+
 void handleStatus(TPacket *packet)
 {
 	char data[65];
@@ -90,6 +99,9 @@ void handleResponse(TPacket *packet)
 		case RESP_STATUS:
 			handleStatus(packet);
 		break;
+
+		case RESP_COLOUR:
+			handleColour(packet);
 
 		default:
 		printf("Boo\n");
