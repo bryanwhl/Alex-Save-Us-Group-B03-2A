@@ -46,7 +46,7 @@ void handleColour(const char* buffer)
 	memcpy(data, &buffer[1], sizeof(data));
 
 	printf("\n ------- ALEX COLOUR SENSE ------- \n\n");
-	printf("Colour:\t\t%d\n", data[0]);
+	printf("Colour:\t\t%c\n", data[0]);
 	printf("\n---------------------------------------\n\n");
 
 }
