@@ -84,8 +84,8 @@ void dbprint(char *format, ...) {
 // Number of ticks per revolution from the 
 // wheel encoder.
 
-#define COUNTS_PER_REV_LEFT      137
-#define COUNTS_PER_REV_RIGHT     210
+#define COUNTS_PER_REV_LEFT      182
+#define COUNTS_PER_REV_RIGHT     192
 
 // Wheel circumference in cm.
 // We will use this to calculate forward/backward distance traveled 
@@ -126,23 +126,23 @@ volatile unsigned long forwardDist;
 volatile unsigned long reverseDist;
 //unsigned long deltaDist;
 //unsigned long newDist;
-unsigned long deltaTicks;
-unsigned long targetTicks;
+volatile unsigned long deltaTicks;
+volatile unsigned long targetTicks;
 // vars for straught movement
-unsigned long num_ticks_l;
-unsigned long num_ticks_r;
-int val;
-int power_l;
-int power_r;
-unsigned long diff_l;
-unsigned long diff_r;
-unsigned long enc_l_prev;
-unsigned long enc_r_prev;
-float num_rev;
-unsigned long target_count_left;
-unsigned long target_count_right;
-unsigned long timeNow;
-unsigned long commandTime;
+volatile unsigned long num_ticks_l;
+volatile unsigned long num_ticks_r;
+volatile int val;
+volatile int power_l;
+volatile int power_r;
+volatile unsigned long diff_l;
+volatile unsigned long diff_r;
+volatile unsigned long enc_l_prev;
+volatile unsigned long enc_r_prev;
+volatile float num_rev;
+volatile unsigned long target_count_left;
+volatile unsigned long target_count_right;
+volatile unsigned long timeNow;
+volatile unsigned long commandTime;
 const int motor_offset = 5; 
   
 /*
@@ -152,11 +152,17 @@ const int motor_offset = 5;
  */
 void WDT_off(void)
 {
+  cli();
+  
   MCUSR &= ~(1<<WDRF);
 
   WDTCSR |= (1<<WDCE) | (1<<WDE);
 
   WDTCSR =0x00;
+
+  EIMSK |= 0b00000011; 
+
+  sei();
 }
 
 void setupPowerSaving()
@@ -166,10 +172,9 @@ void setupPowerSaving()
   PRR |= PRR_SPI_MASK;
   ADCSRA &= 0b01111111;
   PRR |= PRR_ADC_MASK;
-  SMCR |= 0b00000001;
-  SMCR &= 0b11110001;
-  DDRB = 0b00100000;//output
-  PORTB = 0b00000000;//logic low
+  SMCR &= SMCR_IDLE_MODE_MASK;
+  DDRB |= 0b00100000;//output
+  PORTB &= 0b11011111;//logic low
 }
 
 void putArduinoToIdle()
@@ -1034,16 +1039,19 @@ void adjustMove()
     enc_r_prev = num_ticks_r;
 
     // If left is faster, slow it down and speed up right
-    if ( (float)diff_l / COUNTS_PER_REV_LEFT > (float)diff_r / COUNTS_PER_REV_RIGHT  && millis() - timeNow >= 20 && millis() - commandTime >= 500) {
+    if ( (float)diff_l / COUNTS_PER_REV_LEFT > (float)diff_r / COUNTS_PER_REV_RIGHT  && millis() - timeNow >= 20 ) //&& millis() - commandTime >= 500 
+    {
 //      power_l -= motor_offset;
 //      power_r += motor_offset;
         slower_l();
         faster_r();
+
       timeNow = millis();
     }
 
     // If right is faster, slow it down and speed up left
-    if ( (float)diff_l / COUNTS_PER_REV_LEFT < (float)diff_r / COUNTS_PER_REV_RIGHT && millis() - timeNow >= 20 && millis() - commandTime >= 500) {
+    if ( (float)diff_l / COUNTS_PER_REV_LEFT < (float)diff_r / COUNTS_PER_REV_RIGHT && millis() - timeNow >= 20 )//&& millis() - commandTime >= 500 
+    {
 //      power_l += motor_offset;
 //      power_r -= motor_offset;
         faster_l();

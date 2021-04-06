@@ -146,6 +146,8 @@ void WDT_off(void)
   WDTCSR =0x00;
 
   EIMSK |= 0b00000011;
+
+  sei();
 }
 
 void setupPowerSaving()

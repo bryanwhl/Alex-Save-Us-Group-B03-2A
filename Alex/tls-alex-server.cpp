@@ -65,7 +65,7 @@ void handleMessage(TPacket *packet)
 	sendNetworkData(data, sizeof(data));
 }
 
-void handleColour(Tpacket* packet)
+void handleColour(TPacket* packet)
 {
 	char data[65];
 	printf("UART COLOUR PACKET\n");
