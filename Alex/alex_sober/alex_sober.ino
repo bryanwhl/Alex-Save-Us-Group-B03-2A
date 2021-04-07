@@ -84,7 +84,7 @@ void dbprint(char *format, ...) {
 // Number of ticks per revolution from the 
 // wheel encoder.
 
-#define COUNTS_PER_REV_LEFT      182
+#define COUNTS_PER_REV_LEFT      210
 #define COUNTS_PER_REV_RIGHT     192
 
 // Wheel circumference in cm.
@@ -554,6 +554,7 @@ int pwmVal(float speed)
 // continue moving forward indefinitely.
 void forward(float dist, float speed)
 {
+  clearCounters();
   dir = FORWARD;
   
   val = pwmVal(speed);
@@ -564,8 +565,8 @@ void forward(float dist, float speed)
   enc_r_prev = rightForwardTicks;
 
   num_rev = dist / WHEEL_CIRC;
-  target_count_left = (num_rev * COUNTS_PER_REV_LEFT) + leftForwardTicks;
-  target_count_right = (num_rev * COUNTS_PER_REV_RIGHT) + rightForwardTicks;
+  target_count_left = (num_rev * COUNTS_PER_REV_LEFT);// + leftForwardTicks;
+  target_count_right = (num_rev * COUNTS_PER_REV_RIGHT);// + rightForwardTicks;
   commandTime = millis();
   drive();
 }
@@ -577,6 +578,7 @@ void forward(float dist, float speed)
 // continue reversing indefinitely.
 void reverse(float dist, float speed)
 {
+  clearCounters();
   dir = REVERSE;
   val = pwmVal(speed);
   power_l = -val;
@@ -586,8 +588,8 @@ void reverse(float dist, float speed)
   enc_r_prev = rightReverseTicks;
   
   num_rev = dist / WHEEL_CIRC;
-  target_count_left = (num_rev * COUNTS_PER_REV_LEFT) + leftReverseTicks;
-  target_count_right = (num_rev * COUNTS_PER_REV_RIGHT) + rightReverseTicks;
+  target_count_left = (num_rev * COUNTS_PER_REV_LEFT); //+ leftReverseTicks;
+  target_count_right = (num_rev * COUNTS_PER_REV_RIGHT); //+ rightReverseTicks;
   commandTime = millis();
   drive();
 //  OCR0A = 0;//LF
@@ -612,6 +614,7 @@ unsigned long computeDeltaTicks(float ang, int counts)
 void left(float ang, float speed)
 {
   dir = LEFT;
+  clearCounters();
   val = pwmVal(speed);
   power_l = -val;
   power_r = val;
@@ -620,8 +623,8 @@ void left(float ang, float speed)
   enc_r_prev = rightReverseTicks;
   
   //num_rev = ang/360;
-  target_count_left = computeDeltaTicks(ang, COUNTS_PER_REV_LEFT) + leftReverseTicksTurns;//(num_rev * COUNTS_PER_REV_LEFT) + leftReverseTicksTurns;
-  target_count_right = computeDeltaTicks(ang, COUNTS_PER_REV_RIGHT) + rightForwardTicksTurns; //(num_rev * COUNTS_PER_REV_RIGHT) + rightForwardTicksTurns;
+  target_count_left = computeDeltaTicks(ang, COUNTS_PER_REV_LEFT);// + leftReverseTicksTurns;//(num_rev * COUNTS_PER_REV_LEFT) + leftReverseTicksTurns;
+  target_count_right = computeDeltaTicks(ang, COUNTS_PER_REV_RIGHT);// + rightForwardTicksTurns; //(num_rev * COUNTS_PER_REV_RIGHT) + rightForwardTicksTurns;
 
   commandTime = millis();
   drive();
@@ -639,6 +642,7 @@ void left(float ang, float speed)
 void right(float ang, float speed)
 {
   dir = RIGHT;
+  clearCounters();
   val = pwmVal(speed);
   power_l = val;
   power_r = -val;
@@ -647,8 +651,8 @@ void right(float ang, float speed)
   enc_r_prev = rightReverseTicks;
   
 //  num_rev = (ang/360); //* WHEEL_CIRC;
-  target_count_left = computeDeltaTicks(ang, COUNTS_PER_REV_LEFT) + leftForwardTicksTurns;//(num_rev * COUNTS_PER_REV_LEFT) + leftForwardTicksTurns;
-  target_count_right = computeDeltaTicks(ang, COUNTS_PER_REV_RIGHT) + rightReverseTicksTurns;//(num_rev * COUNTS_PER_REV_RIGHT) + rightReverseTicksTurns;
+  target_count_left = computeDeltaTicks(ang, COUNTS_PER_REV_LEFT);// + leftForwardTicksTurns;//(num_rev * COUNTS_PER_REV_LEFT) + leftForwardTicksTurns;
+  target_count_right = computeDeltaTicks(ang, COUNTS_PER_REV_RIGHT);// + rightReverseTicksTurns;//(num_rev * COUNTS_PER_REV_RIGHT) + rightReverseTicksTurns;
 
   commandTime = millis();
   drive();
@@ -666,6 +670,7 @@ void stop()
 //  analogWrite(RF, 0);
 //  analogWrite(RR, 0);
   dir = STOP;
+  clearCounters();
   OCR0A = 0;//LF
   OCR1B = 0; //RF
   OCR0B = 0; //LR
@@ -1039,10 +1044,10 @@ void adjustMove()
     enc_r_prev = num_ticks_r;
 
     // If left is faster, slow it down and speed up right
-    if ( (float)diff_l / COUNTS_PER_REV_LEFT > (float)diff_r / COUNTS_PER_REV_RIGHT  && millis() - timeNow >= 20 ) //&& millis() - commandTime >= 500 
+    if ( (float)diff_l / COUNTS_PER_REV_LEFT > ((float)diff_r / COUNTS_PER_REV_RIGHT)  && millis() - timeNow >= 20 ) //&& millis() - commandTime >= 500 
     {
 //      power_l -= motor_offset;
-//      power_r += motor_offset;
+//      power_r += motor_offset;i
         slower_l();
         faster_r();
 
@@ -1050,7 +1055,7 @@ void adjustMove()
     }
 
     // If right is faster, slow it down and speed up left
-    if ( (float)diff_l / COUNTS_PER_REV_LEFT < (float)diff_r / COUNTS_PER_REV_RIGHT && millis() - timeNow >= 20 )//&& millis() - commandTime >= 500 
+    if ( (float)diff_l / COUNTS_PER_REV_LEFT < ((float)diff_r / COUNTS_PER_REV_RIGHT) && millis() - timeNow >= 20 )//&& millis() - commandTime >= 500 
     {
 //      power_l += motor_offset;
 //      power_r -= motor_offset;
