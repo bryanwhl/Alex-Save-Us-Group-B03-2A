@@ -69,6 +69,44 @@ void setup()
   strip.show();
 }
 
+//void colour_sense()
+//{
+//  turnOn();
+//  time_now = millis();   
+//  while(millis() < time_now + 100);
+//
+//  red = 0;
+//  green = 0;
+//  blue = 0;
+//
+//  for (int i = 0; i < 10; i ++)
+//  {
+//    red += RGB_sensor.readRed();
+//    green += RGB_sensor.readGreen();
+//    blue += RGB_sensor.readBlue();
+//  }
+//  red /= 10;
+//  green/=10;
+//  blue /= 10;
+//  
+//  // Print out readings, change HEX to DEC if you prefer decimal output
+//  Serial.print("Red: "); Serial.println(red,DEC);
+//  Serial.print("Green: "); Serial.println(green,DEC);
+//  Serial.print("Blue: "); Serial.println(blue,DEC);
+//  Serial.println();
+//
+//  //send back to pi to print
+//  if (red > green)
+//  {
+//    Serial.println("red");
+//    
+//  }
+//  else
+//  {
+//    Serial.println("green");
+//  }
+//}
+
 void colour_sense()
 {
   turnOn();
@@ -86,26 +124,46 @@ void colour_sense()
     blue += RGB_sensor.readBlue();
   }
   red /= 10;
-  green/=10;
+  green /=10;
   blue /= 10;
   
+
+  turnOff();
+
   // Print out readings, change HEX to DEC if you prefer decimal output
   Serial.print("Red: "); Serial.println(red,DEC);
   Serial.print("Green: "); Serial.println(green,DEC);
   Serial.print("Blue: "); Serial.println(blue,DEC);
   Serial.println();
 
-  //send back to pi to print
-  if (red > green)
+  red = MAX_RED * (float)red/65535;
+  green = MAX_GREEN * (float)green/65535; 
+  blue = MAX_BLUE * (float)blue/65535;
+  
+  unsigned int red_tolerance = MAX_RED * 2507.0/65535;
+  unsigned int green_tolerance = MAX_GREEN * 2507.0/65535;
+  unsigned int blue_tolerance = MAX_BLUE * 2507.0/65535;
+
+  if (red <= MAX_RED + red_tolerance && MAX_RED - red_tolerance <= red
+          && green <= MIN_GREEN + green_tolerance && MIN_GREEN - green_tolerance <= green
+          && blue <= MIN_BLUE + blue_tolerance && MIN_BLUE - blue_tolerance <= blue)
   {
     Serial.println("red");
-    
   }
-  else
+
+  else if (green <= MAX_GREEN + green_tolerance && MAX_GREEN - green_tolerance <= green
+            && red <= MIN_RED + red_tolerance && MIN_RED - red_tolerance <= red
+            && blue <= MIN_BLUE + blue_tolerance && MIN_BLUE - blue_tolerance <= blue)
   {
     Serial.println("green");
   }
+
+  else
+  {
+    Serial.println("X");
+  }
 }
+
 // Read sensor values for each color and print them to serial monitor
 void loop()
 {
