@@ -166,7 +166,7 @@ void WDT_off(void)
 
   WDTCSR =0x00;
 
-  EIMSK |= 0b00000011; 
+  //EIMSK |= 0b00000011; 
 
   sei();
 }
@@ -174,14 +174,14 @@ void WDT_off(void)
 void setupPowerSaving()
 {
   WDT_off();
-  WDTCSR = 0x00;
+  //WDTCSR = 0x00;
   //PRR |= PRR_TWI_MASK;
   PRR |= PRR_SPI_MASK;
   ADCSRA &= 0b01111111;
   PRR |= PRR_ADC_MASK;
   SMCR &= SMCR_IDLE_MODE_MASK;
-  DDRB |= 0b00100000;//output
-  PORTB &= 0b11011111;//logic low
+  //DDRB |= 0b00100000;//output
+  //PORTB &= 0b11011111;//logic low
 }
 
 void putArduinoToIdle()
@@ -189,12 +189,12 @@ void putArduinoToIdle()
   PRR |= PRR_TIMER0_MASK;
   PRR |= PRR_TIMER1_MASK;
   PRR |= PRR_TIMER2_MASK;
-  SMCR |= SMCR_SLEEP_ENABLE_MASK;
+  SMCR &= SMCR_SLEEP_ENABLE_MASK;
   sleep_cpu();
-  SMCR &= ~SMCR_SLEEP_ENABLE_MASK;
-  PRR &= PRR_TIMER0_MASK;
-  PRR &= PRR_TIMER1_MASK;
-  PRR &= PRR_TIMER2_MASK;
+  SMCR |= ~SMCR_SLEEP_ENABLE_MASK;
+  PRR &= ~PRR_TIMER0_MASK;
+  PRR &= ~PRR_TIMER1_MASK;
+  PRR &= ~PRR_TIMER2_MASK;
 }
  
 TResult readPacket(TPacket *packet)
@@ -682,7 +682,7 @@ void stop()
   OCR1B = 0; //RF
   OCR0B = 0; //LR
   OCR2A = 0; //RR
-  //putArduinoToIdle();
+  putArduinoToIdle();
 }
 
 /*
@@ -845,7 +845,7 @@ void setup() {
   startMotors();
   enablePullups();
   initializeState();
-  //setupPowerSaving();
+  setupPowerSaving();
   sei();
 }
 
