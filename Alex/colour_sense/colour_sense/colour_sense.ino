@@ -36,9 +36,9 @@ Distributed as-is; no warranty is given.
 #define MIN_BLUE 0
 unsigned long time_now = 0;
 
-unsigned int red = 0;
-unsigned int green = 0;
-unsigned int blue = 0;
+unsigned long red = 0;
+unsigned long green = 0;
+unsigned long blue = 0;
   
 // Declare sensor object
 SFE_ISL29125 RGB_sensor;
@@ -131,6 +131,8 @@ void colour_sense()
     red += RGB_sensor.readRed();
     green += RGB_sensor.readGreen();
     blue += RGB_sensor.readBlue();
+    time_now = millis();   
+    while(millis() < time_now + 100);
   }
   red /= 10;
   green /=10;
@@ -144,40 +146,41 @@ void colour_sense()
   Serial.print("Green: "); Serial.println(green,DEC);
   Serial.print("Blue: "); Serial.println(blue,DEC);
   Serial.println();
-
-  red = MAX_RED * (float)red/65535;
-  green = MAX_GREEN * (float)green/65535; 
-  blue = MAX_BLUE * (float)blue/65535;
-  
-  unsigned int red_tolerance = MAX_RED * 2507.0/65535;
-  unsigned int green_tolerance = MAX_GREEN * 2507.0/65535;
-  unsigned int blue_tolerance = MAX_BLUE * 2507.0/65535;
-
-  if (red <= MAX_RED + red_tolerance && MAX_RED - red_tolerance <= red
-          && green <= MIN_GREEN + green_tolerance && MIN_GREEN - green_tolerance <= green
-          && blue <= MIN_BLUE + blue_tolerance && MIN_BLUE - blue_tolerance <= blue)
-  {
-    Serial.println("red");
-  }
-
-  else if (green <= MAX_GREEN + green_tolerance && MAX_GREEN - green_tolerance <= green
-            && red <= MIN_RED + red_tolerance && MIN_RED - red_tolerance <= red
-            && blue <= MIN_BLUE + blue_tolerance && MIN_BLUE - blue_tolerance <= blue)
-  {
-    Serial.println("green");
-  }
-
-  else
-  {
-    Serial.println("X");
-  }
+//
+//  red = MAX_RED * (float)red/65535;
+//  green = MAX_GREEN * (float)green/65535; 
+//  blue = MAX_BLUE * (float)blue/65535;
+//  
+//  unsigned int red_tolerance = MAX_RED * 2507.0/65535;
+//  unsigned int green_tolerance = MAX_GREEN * 2507.0/65535;
+//  unsigned int blue_tolerance = MAX_BLUE * 2507.0/65535;
+//
+//  if (red <= MAX_RED + red_tolerance && MAX_RED - red_tolerance <= red
+//          && green <= MIN_GREEN + green_tolerance && MIN_GREEN - green_tolerance <= green
+//          && blue <= MIN_BLUE + blue_tolerance && MIN_BLUE - blue_tolerance <= blue)
+//  {
+//    Serial.println("red");
+//  }
+//
+//  else if (green <= MAX_GREEN + green_tolerance && MAX_GREEN - green_tolerance <= green
+//            && red <= MIN_RED + red_tolerance && MIN_RED - red_tolerance <= red
+//            && blue <= MIN_BLUE + blue_tolerance && MIN_BLUE - blue_tolerance <= blue)
+//  {
+//    Serial.println("green");
+//  }
+//
+//  else
+//  {
+//    Serial.println("X");
+//  }
 }
 
 // Read sensor values for each color and print them to serial monitor
 void loop()
 {
   // Read sensor values (16 bit integers)
-
+  colour_sense();
+  delay(1000);
   //turnOff();
   //delay(1000);
 }

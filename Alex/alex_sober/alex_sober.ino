@@ -36,9 +36,9 @@ volatile unsigned long time_now = 0;
 SFE_ISL29125 RGB_sensor;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(8, LEDSTRIP, NEO_GRB + NEO_KHZ800);
 volatile char colour;
-unsigned int red = 0;
-unsigned int green = 0;
-unsigned int blue = 0;
+unsigned long red = 0;
+unsigned long green = 0;
+unsigned long blue = 0;
 
 //unsigned long duration = 0;
 //unsigned long cm = 999;
@@ -257,6 +257,8 @@ void sendColour(char c)
     red += RGB_sensor.readRed();
     green += RGB_sensor.readGreen();
     blue += RGB_sensor.readBlue();
+    time_now = millis();   
+    while(millis() < time_now + 100);
   }
   red /= 10;
   green/=10;
@@ -275,9 +277,9 @@ void sendColour(char c)
   statusPacket.packetType = PACKET_TYPE_RESPONSE;
   statusPacket.command = RESP_COLOUR;//COMMAND_COLOUR;
   statusPacket.params[0] = c;
-  statusPacket.params[1] = map(red, 0, 65535, 0, 255);
-  statusPacket.params[2] = map(green, 0, 65535, 0, 255);
-  statusPacket.params[3] = map(blue, 0, 65535, 0, 255);
+  statusPacket.params[1] = map(red, 400, 5000, 0, 255);
+  statusPacket.params[2] = map(green, 400, 5000, 0, 255);
+  statusPacket.params[3] = map(blue, 400, 5000, 0, 255);
   
   turnOff();
   sendResponse(&statusPacket);
