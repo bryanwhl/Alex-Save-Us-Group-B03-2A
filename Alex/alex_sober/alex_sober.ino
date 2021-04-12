@@ -268,7 +268,10 @@ void sendColour(char c)
   statusPacket.packetType = PACKET_TYPE_RESPONSE;
   statusPacket.command = RESP_COLOUR;//COMMAND_COLOUR;
   statusPacket.params[0] = c;
-
+  statusPacket.params[1] = map(red, 0, 65535, 0, 255);
+  statusPacket.params[2] = map(green, 0, 65535, 0, 255);
+  statusPacket.params[3] = map(blue, 0, 65535, 0, 255);
+  
   turnOff();
   sendResponse(&statusPacket);
 }

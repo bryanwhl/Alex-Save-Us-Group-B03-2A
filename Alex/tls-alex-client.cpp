@@ -47,6 +47,9 @@ void handleColour(const char* buffer)
 
 	printf("\n ------- ALEX COLOUR SENSE ------- \n\n");
 	printf("Colour:\t\t%c\n", data[0]);
+	printf("Red Intensity:\t\t%c\n", data[1]);
+	printf("Green Intensity:\t\t%c\n", data[2]);
+	printf("BLue Intensity:\t\t%c\n", data[3]);
 	printf("\n---------------------------------------\n\n");
 
 }
