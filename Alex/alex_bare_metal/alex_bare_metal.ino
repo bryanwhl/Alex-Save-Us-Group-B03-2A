@@ -84,8 +84,8 @@ void dbprint(char *format, ...) {
 // Number of ticks per revolution from the 
 // wheel encoder.
 
-#define COUNTS_PER_REV_LEFT      137
-#define COUNTS_PER_REV_RIGHT     210
+#define COUNTS_PER_REV_LEFT      210
+#define COUNTS_PER_REV_RIGHT     192
 
 // Wheel circumference in cm.
 // We will use this to calculate forward/backward distance traveled 

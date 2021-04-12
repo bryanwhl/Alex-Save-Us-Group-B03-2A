@@ -27,8 +27,19 @@ Distributed as-is; no warranty is given.
 #include <Adafruit_NeoPixel.h>
 
 #define LEDSTRIP 8
+#define MAX_RED 0
+#define MAX_GREEN 0
+#define MAX_BLUE 0
+
+#define MIN_RED 0
+#define MIN_GREEN 0
+#define MIN_BLUE 0
 unsigned long time_now = 0;
 
+unsigned int red = 0;
+unsigned int green = 0;
+unsigned int blue = 0;
+  
 // Declare sensor object
 SFE_ISL29125 RGB_sensor;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(8, LEDSTRIP, NEO_GRB + NEO_KHZ800);
@@ -52,9 +63,7 @@ void turnOff() {
 void setup()
 {
   // Initialize serial communication
-  unsigned int red = 0;
-  unsigned int green = 0;
-  unsigned int blue = 0;
+  
   
   Serial.begin(115200);
 
@@ -168,7 +177,7 @@ void colour_sense()
 void loop()
 {
   // Read sensor values (16 bit integers)
- 
+
   //turnOff();
   //delay(1000);
 }

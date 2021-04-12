@@ -9,6 +9,7 @@
 //#define PI 3.141592654
 #define ALEX_LENGTH 20
 #define ALEX_BREADTH 12
+#define BUZZER 13
 
 //powermanagement
 #define PRR_TWI_MASK 0b10000000
@@ -30,7 +31,7 @@ float alexCirc = 0.0;
 #include <Adafruit_NeoPixel.h>
 
 #define LEDSTRIP 8
-unsigned long time_now = 0;
+volatile unsigned long time_now = 0;
 // Declare sensor object
 SFE_ISL29125 RGB_sensor;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(8, LEDSTRIP, NEO_GRB + NEO_KHZ800);
@@ -38,7 +39,12 @@ volatile char colour;
 unsigned int red = 0;
 unsigned int green = 0;
 unsigned int blue = 0;
-  
+
+//unsigned long duration = 0;
+//unsigned long cm = 999;
+//unsigned long inches = 999;
+//volatile bool tooNear = false;
+
 void turnOn() {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
     strip.setPixelColor(i, strip.Color(255, 255, 255));
@@ -85,7 +91,7 @@ void dbprint(char *format, ...) {
 // wheel encoder.
 
 #define COUNTS_PER_REV_LEFT      210
-#define COUNTS_PER_REV_RIGHT     192
+#define COUNTS_PER_REV_RIGHT     140//120 works
 
 // Wheel circumference in cm.
 // We will use this to calculate forward/backward distance traveled 
@@ -160,21 +166,22 @@ void WDT_off(void)
 
   WDTCSR =0x00;
 
-  EIMSK |= 0b00000011; 
+  //EIMSK |= 0b00000011; 
 
   sei();
 }
 
 void setupPowerSaving()
 {
-  WDTCSR = 0x00;
+  WDT_off();
+  //WDTCSR = 0x00;
   //PRR |= PRR_TWI_MASK;
   PRR |= PRR_SPI_MASK;
   ADCSRA &= 0b01111111;
   PRR |= PRR_ADC_MASK;
   SMCR &= SMCR_IDLE_MODE_MASK;
-  DDRB |= 0b00100000;//output
-  PORTB &= 0b11011111;//logic low
+  //DDRB |= 0b00100000;//output
+  //PORTB &= 0b11011111;//logic low
 }
 
 void putArduinoToIdle()
@@ -182,12 +189,12 @@ void putArduinoToIdle()
   PRR |= PRR_TIMER0_MASK;
   PRR |= PRR_TIMER1_MASK;
   PRR |= PRR_TIMER2_MASK;
-  SMCR |= SMCR_SLEEP_ENABLE_MASK;
+  SMCR &= SMCR_SLEEP_ENABLE_MASK;
   sleep_cpu();
-  SMCR &= ~SMCR_SLEEP_ENABLE_MASK;
-  PRR &= PRR_TIMER0_MASK;
-  PRR &= PRR_TIMER1_MASK;
-  PRR &= PRR_TIMER2_MASK;
+  SMCR |= ~SMCR_SLEEP_ENABLE_MASK;
+  PRR &= ~PRR_TIMER0_MASK;
+  PRR &= ~PRR_TIMER1_MASK;
+  PRR &= ~PRR_TIMER2_MASK;
 }
  
 TResult readPacket(TPacket *packet)
@@ -571,7 +578,7 @@ void forward(float dist, float speed)
   target_count_left = (num_rev * COUNTS_PER_REV_LEFT);// + leftForwardTicks;
   target_count_right = (num_rev * COUNTS_PER_REV_RIGHT);// + rightForwardTicks;
   commandTime = millis();
-  drive();
+  //drive();
 }
 
 // Reverse Alex "dist" cm at speed "speed".
@@ -594,7 +601,7 @@ void reverse(float dist, float speed)
   target_count_left = (num_rev * COUNTS_PER_REV_LEFT); //+ leftReverseTicks;
   target_count_right = (num_rev * COUNTS_PER_REV_RIGHT); //+ rightReverseTicks;
   commandTime = millis();
-  drive();
+  //drive();
 //  OCR0A = 0;//LF
 //  OCR1B = 0; //RF
 //  OCR0B = val; //LR
@@ -626,11 +633,11 @@ void left(float ang, float speed)
   enc_r_prev = rightReverseTicks;
   
   //num_rev = ang/360;
-  target_count_left = computeDeltaTicks(ang, COUNTS_PER_REV_LEFT);// + leftReverseTicksTurns;//(num_rev * COUNTS_PER_REV_LEFT) + leftReverseTicksTurns;
-  target_count_right = computeDeltaTicks(ang, COUNTS_PER_REV_RIGHT);// + rightForwardTicksTurns; //(num_rev * COUNTS_PER_REV_RIGHT) + rightForwardTicksTurns;
+  target_count_left = computeDeltaTicks(ang, COUNTS_PER_REV_LEFT)/2;// + leftReverseTicksTurns;//(num_rev * COUNTS_PER_REV_LEFT) + leftReverseTicksTurns;
+  target_count_right = computeDeltaTicks(ang, COUNTS_PER_REV_RIGHT)/2;// + rightForwardTicksTurns; //(num_rev * COUNTS_PER_REV_RIGHT) + rightForwardTicksTurns;
 
   commandTime = millis();
-  drive();
+  //drive();
 //  OCR0A = 0;//LF
 //  OCR1B = val; //RF
 //  OCR0B = val; //LR
@@ -654,11 +661,11 @@ void right(float ang, float speed)
   enc_r_prev = rightReverseTicks;
   
 //  num_rev = (ang/360); //* WHEEL_CIRC;
-  target_count_left = computeDeltaTicks(ang, COUNTS_PER_REV_LEFT);// + leftForwardTicksTurns;//(num_rev * COUNTS_PER_REV_LEFT) + leftForwardTicksTurns;
-  target_count_right = computeDeltaTicks(ang, COUNTS_PER_REV_RIGHT);// + rightReverseTicksTurns;//(num_rev * COUNTS_PER_REV_RIGHT) + rightReverseTicksTurns;
+  target_count_left = computeDeltaTicks(ang, COUNTS_PER_REV_LEFT)/2;// + leftForwardTicksTurns;//(num_rev * COUNTS_PER_REV_LEFT) + leftForwardTicksTurns;
+  target_count_right = computeDeltaTicks(ang, COUNTS_PER_REV_RIGHT)/2;// + rightReverseTicksTurns;//(num_rev * COUNTS_PER_REV_RIGHT) + rightReverseTicksTurns;
 
   commandTime = millis();
-  drive();
+  //drive();
 //  OCR0A = val;//LF
 //  OCR1B = 0; //RF
 //  OCR0B = 0; //LR
@@ -673,11 +680,12 @@ void stop()
 //  analogWrite(RF, 0);
 //  analogWrite(RR, 0);
   dir = STOP;
-  clearCounters();
+  //clearCounters();
   OCR0A = 0;//LF
   OCR1B = 0; //RF
   OCR0B = 0; //LR
   OCR2A = 0; //RR
+  putArduinoToIdle();
 }
 
 /*
@@ -814,7 +822,10 @@ void setup() {
   commandTime = millis();
   alexDiagonal = sqrt((ALEX_LENGTH * ALEX_LENGTH) + (ALEX_BREADTH * ALEX_BREADTH));
   alexCirc = PI * alexDiagonal;
-  
+ 
+  DDRB |= 0b01000010;
+  DDRB &= 0b11101111;
+
   red  = 0;
   green = 0;
   blue = 0;
@@ -837,7 +848,7 @@ void setup() {
   startMotors();
   enablePullups();
   initializeState();
-  //setupPowerSaving();
+  setupPowerSaving();
   sei();
 }
 
@@ -926,7 +937,12 @@ void slower_r()
   {
     if (power_r - motor_offset >= 0)
     {
-      power_r -= motor_offset;  
+      power_r -= motor_offset;
+      /*
+      if (dir == FORWARD){
+        power_r--;
+      }
+      */
     }
     else
     {
@@ -958,6 +974,11 @@ void faster_r()
     else
     {
       power_r += motor_offset;
+      /*
+      if (dir == FORWARD){
+          power_r++;
+      }
+      */
     }
   }
   else
@@ -999,6 +1020,13 @@ void faster_l()
   }
 }
 
+//void alarm() {
+//  tone(BUZZER, 1000);
+//}
+
+//void offAlarm(){
+//  noTone(BUZZER);
+//}
 
 void adjustMove()
 {
@@ -1047,7 +1075,8 @@ void adjustMove()
     enc_r_prev = num_ticks_r;
 
     // If left is faster, slow it down and speed up right
-    if ( (float)diff_l / COUNTS_PER_REV_LEFT > ((float)diff_r / COUNTS_PER_REV_RIGHT)  && millis() - timeNow >= 20 ) //&& millis() - commandTime >= 500 
+    //(float)diff_l / COUNTS_PER_REV_LEFT > ((float)diff_r / COUNTS_PER_REV_RIGHT)
+    if ( diff_l > diff_r  && millis() - timeNow >= 0 ) //&& millis() - commandTime >= 500 
     {
 //      power_l -= motor_offset;
 //      power_r += motor_offset;i
@@ -1058,7 +1087,8 @@ void adjustMove()
     }
 
     // If right is faster, slow it down and speed up left
-    if ( (float)diff_l / COUNTS_PER_REV_LEFT < ((float)diff_r / COUNTS_PER_REV_RIGHT) && millis() - timeNow >= 20 )//&& millis() - commandTime >= 500 
+    //(float)diff_l / COUNTS_PER_REV_LEFT < ((float)diff_r / COUNTS_PER_REV_RIGHT) && millis() - timeNow >= 20 
+    if ( diff_l < diff_r && millis() - timeNow >= 0 )//&& millis() - commandTime >= 500 
     {
 //      power_l += motor_offset;
 //      power_r -= motor_offset;
@@ -1093,6 +1123,36 @@ void loop() {
   TPacket recvPacket; // This holds commands from the Pi
 
   TResult result = readPacket(&recvPacket);
+
+//   PORTB &= 0b11111101;
+//    delayMicroseconds(5);
+//    PORTB |= 0b00000010;
+//    delayMicroseconds(10);
+//    PORTB &= 0b11111101;
+//
+//    duration = pulseIn(12, HIGH);
+//
+//    cm = (duration/2) / 29.1;
+//    inches = (duration/2) / 74;
+//    
+//    unsigned long change_cm = cm;
+//
+//    char buff[3];
+//    buff[0] = '0';
+//    buff[1] = '0';
+//    buff[2] = '0';
+//    
+//    int digit;
+//    char character;
+//    int index = 2;
+//    while (change_cm != 0 && index >= 0) {
+//        digit = change_cm % 10;
+//        character = digit + 48;
+//        change_cm = change_cm / 10;
+//        buff[index] = character;
+//        index--;
+//    }
+
   
   if(result == PACKET_OK)
   {
@@ -1114,11 +1174,19 @@ void loop() {
 
     if (dir == STOP)
     {
-
       stop();
     }
+//    else if (cm < 6 && dir == FORWARD) {
+//      if (!tooNear) {
+//          //dbprint(buff);
+//          sendMessage(buff);
+//          tooNear = true; 
+//      }
+//      stop();
+//    }
     else
     {
+//      tooNear = false;
       adjustMove();
     }
 
