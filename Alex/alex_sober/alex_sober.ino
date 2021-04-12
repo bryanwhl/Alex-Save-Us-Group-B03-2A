@@ -40,10 +40,10 @@ unsigned int red = 0;
 unsigned int green = 0;
 unsigned int blue = 0;
 
-unsigned long duration = 0;
-unsigned long cm = 999;
-unsigned long inches = 999;
-volatile bool tooNear = false;
+//unsigned long duration = 0;
+//unsigned long cm = 999;
+//unsigned long inches = 999;
+//volatile bool tooNear = false;
 
 void turnOn() {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
@@ -1121,34 +1121,34 @@ void loop() {
 
   TResult result = readPacket(&recvPacket);
 
-   PORTB &= 0b11111101;
-    delayMicroseconds(5);
-    PORTB |= 0b00000010;
-    delayMicroseconds(10);
-    PORTB &= 0b11111101;
-
-    duration = pulseIn(12, HIGH);
-
-    cm = (duration/2) / 29.1;
-    inches = (duration/2) / 74;
-    
-    unsigned long change_cm = cm;
-
-    char buff[3];
-    buff[0] = '0';
-    buff[1] = '0';
-    buff[2] = '0';
-    
-    int digit;
-    char character;
-    int index = 2;
-    while (change_cm != 0 && index >= 0) {
-        digit = change_cm % 10;
-        character = digit + 48;
-        change_cm = change_cm / 10;
-        buff[index] = character;
-        index--;
-    }
+//   PORTB &= 0b11111101;
+//    delayMicroseconds(5);
+//    PORTB |= 0b00000010;
+//    delayMicroseconds(10);
+//    PORTB &= 0b11111101;
+//
+//    duration = pulseIn(12, HIGH);
+//
+//    cm = (duration/2) / 29.1;
+//    inches = (duration/2) / 74;
+//    
+//    unsigned long change_cm = cm;
+//
+//    char buff[3];
+//    buff[0] = '0';
+//    buff[1] = '0';
+//    buff[2] = '0';
+//    
+//    int digit;
+//    char character;
+//    int index = 2;
+//    while (change_cm != 0 && index >= 0) {
+//        digit = change_cm % 10;
+//        character = digit + 48;
+//        change_cm = change_cm / 10;
+//        buff[index] = character;
+//        index--;
+//    }
 
   
   if(result == PACKET_OK)
@@ -1173,16 +1173,17 @@ void loop() {
     {
       stop();
     }
-    else if (cm < 6 && dir == FORWARD) {
-      if (!tooNear) {
-          dbprint(buff);
-          tooNear = true; 
-      }
-      stop();
-    }
+//    else if (cm < 6 && dir == FORWARD) {
+//      if (!tooNear) {
+//          //dbprint(buff);
+//          sendMessage(buff);
+//          tooNear = true; 
+//      }
+//      stop();
+//    }
     else
     {
-      tooNear = false;
+//      tooNear = false;
       adjustMove();
     }
 
