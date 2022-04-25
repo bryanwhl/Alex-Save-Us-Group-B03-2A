@@ -1,4 +1,4 @@
 # Alex to the rescue
 Group B03-2A
 
-alex_sober: Firmware for alex's movement and communication with Raspberry Pi
+Remotely operated robot that uses LiDAR to map its surrounding, allowing remotely piloted navigation. The robot is built with Raspberry Pi and Arduino.
